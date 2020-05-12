@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+           id="cordova-plugin-live-ocr"
+      version="1.0.1">
+    <name>Live OCR Plugin</name>
+    
+    <engines>
+	<engine name="cordova" version=">=6.4.0" />
+        <engine name="cordova-android" version=">=3.6.0" />
+	<engine name="cordova-ios" version=">=4.3.0" />
+    </engines>
+
+    <js-module src="www/liveOcrPlugin.js" name="LiveOcrPlugin">
+        <clobbers target="LiveOcrPlugin" />
+    </js-module>
+
+    <!-- NOT USED ANYMORE -->
+    <!-- cordova plugin to support cocoapods in ionic project -->
+    <!--<dependency id="cordova-plugin-cocoapod-support"/>-->
+
+    <!-- android -->
+    <platform name="android">
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="LiveOcrPlugin">
+                <param name="android-package" value="at.ventocom.liveocr.LiveOcrPlugin"/>
+                <param name="onload" value="true" />
+            </feature>
+        </config-file>
+
+        <!-- add the ocr activity to our manifest -->
+        <config-file target="AndroidManifest.xml" parent="/manifest/application">
+            <activity android:name="at.ventocom.liveocr.OcrActivity"
+                android:screenOrientation="landscape"
+                android:configChanges="orientation|keyboardHidden|screenSize"
+                android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+                android:windowSoftInputMode="stateAlwaysHidden" />
+        </config-file>
+
+        <!-- ocr scanning needs several permissions, add them to our manifest -->
+        <config-file target="AndroidManifest.xml" parent="/manifest">
+            <uses-permission android:name="android.permission.CAMERA" />
+            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+            <uses-feature android:name="android.hardware.camera.autofocus" />
+            <uses-feature android:name="android.hardware.camera.flash" android:required="false" />
+            <uses-feature android:name="android.hardware.camera" android:required="false" />
+            <uses-feature android:name="android.hardware.screen.landscape" />
+        </config-file>
+
+        <!-- extend the standard cordova gradle build with our custom gradle file, which compiles the libraries -->
+        <framework src="src/android/libs.gradle" custom="true" type="gradleReference" />
+        <!-- OCR library for continous imageprocessing with a custom camera view -->
+        <lib-file src="lib/OCR.aar" />
+        <!-- tess-two library which does the actual ocr recognition -->
+        <lib-file src="lib/tess-two.aar" />
+
+        <!-- native implementation of the plugin -->
+        <source-file src="src/android/LiveOcrPlugin.java" target-dir="src/at/ventocom/liveocr" />
+        <source-file src="src/android/OcrActivity.java" target-dir="src/at/ventocom/liveocr" />
+		
+		<resource-file src="tessdata/deu.traineddata" target="res/raw/deu.traineddata" />
+		<resource-file src="tessdata/eng.traineddata" target="res/raw/eng.traineddata" />
+		<resource-file src="tessdata/por.traineddata" target="res/raw/por.traineddata" />
+    </platform>
+
+    <!-- ios -->
+    <platform name="ios">
+        <config-file target="config.xml" parent="/*">
+		    <feature name="LiveOcrPlugin">
+			    <param name="ios-package" value="LiveOcrPlugin"/>
+                <param name="onload" value="true" />
+		    </feature>
+        </config-file>
+
+	<!-- CONFIG FOR COCOA SUPPORT PLUGIN - NOT USED ANYMORE -->
+        <!-- preferences to use tesseract cocoapod -->
+        <!--<pods-config ios-min-version="8.0" use-frameworks="true"></pods-config>-->
+        <!--<config-file target="config.xml" parent="/*">
+            <preference name="pods_ios_min_version" value="8.0" />
+            <preference name="pods_use_frameworks" value="true" />
+        </config-file>-->
+
+        <!-- tell the cocoapod plugin that we need tesseract in the ios project -->
+        <!--<pod name="TesseractOCRiOS" version="4.0.0" /> -->
+
+        <!-- native implementation of the plugin -->
+        <header-file src="src/ios/LiveOcrPlugin.h" />
+        <source-file src="src/ios/LiveOcrPlugin.m" />
+        <header-file src="src/ios/AROverlayViewController.h" />
+        <source-file src="src/ios/AROverlayViewController.m" />
+        <header-file src="src/ios/CaptureSessionManager.h" />
+        <source-file src="src/ios/CaptureSessionManager.m" />
+
+        <!-- add permission to use camera -->
+        <preference name="CAMERA_USAGE_DESCRIPTION" default=" " />
+        <config-file target="*-Info.plist" parent="NSCameraUsageDescription">
+            <string>Kamerazugriff wird benötigt um Aufladecodes zu scannen</string>
+        </config-file>
+
+        <!-- frameworks used by capture manager and custom camera overlay -->
+        <framework src="CoreImage.framework" />
+        <framework src="CoreGraphics.framework" />
+        <framework src="UIKit.framework" />
+        <framework src="Foundation.framework" />
+	<!-- this is supported since cordova-ios 4.3.0 and cordova-cli 6.4.0, makes cocoapod plugin obsolete -->
+        <framework src="TesseractOCRiOS" type="podspec" spec="~> 4.0.0" />
+
+        <!-- set the tessdata directory as a resource so it can go with the app -->
+        <resource-file src="tessdata" />
+
+        <!-- has to go with the app to display the custom camera overlay -->
+        <resource-file src="src/ios/AROverlayViewController.xib" />
+    </platform>
+</plugin>
